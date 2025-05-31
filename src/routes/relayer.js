@@ -11,25 +11,6 @@ router.get('/orders', async (req, res) => {
   }
 });
 
-// Submit relay transaction
-router.post('/relay', async (req, res) => {
-  try {
-    // TODO: Implement relay transaction submission
-    res.json({ message: 'Submit relay transaction endpoint' });
-  } catch (error) {
-    next(error);
-  }
-});
 
-// Get relay status
-router.get('/status/:relayId', async (req, res) => {
-  try {
-    const { relayId } = req.params;
-    // TODO: Implement relay status check
-    res.json({ message: `Get status for relay ${relayId}` });
-  } catch (error) {
-    next(error);
-  }
-});
 
 module.exports = router; 
