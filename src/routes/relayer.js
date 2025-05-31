@@ -1,83 +1,52 @@
 const express = require('express');
 const router = express.Router();
 
-/**
- * @swagger
- * /relayer/orders:
- *   get:
- *     summary: Get all available orders for relaying
- *     tags: [Relayer]
- *     parameters:
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 10
- *         description: Number of orders to return
- *       - in: query
- *         name: offset
- *         schema:
- *           type: integer
- *           default: 0
- *         description: Number of orders to skip
- *     responses:
- *       200:
- *         description: List of available orders
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 orders:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       orderId:
- *                         type: string
- *                       maker:
- *                         type: string
- *                       status:
- *                         type: string
- *                 total:
- *                   type: integer
- */
-router.get('/orders', (req, res) => {
-  // Implementation here
-  res.json({ message: 'Get available orders' });
-});
+router.get('/getQuote', (req, res) => {
+  const {
+      srcChainId,
+      dstChainId,
+      srcTokenAddress,
+      dstTokenAddress,
+      amount
+  } = req.query;
 
-/**
- * @swagger
- * /relayer/submit:
- *   post:
- *     summary: Submit a relayed order
- *     tags: [Relayer]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - orderId
- *               - transactionHash
- *             properties:
- *               orderId:
- *                 type: string
- *               transactionHash:
- *                 type: string
- *     responses:
- *       200:
- *         description: Order submitted successfully
- *       400:
- *         description: Invalid request
- *       404:
- *         description: Order not found
- */
-router.post('/submit', (req, res) => {
-  // Implementation here
-  res.json({ message: 'Submit relayed order' });
+  if (!srcChainId || !dstChainId || !srcTokenAddress || !dstTokenAddress || !amount) {
+      return res.status(400).json({
+          error: 'Missing required parameters',
+          required: ['srcChainId', 'dstChainId', 'srcTokenAddress', 'dstTokenAddress', 'amount']
+      });
+  }
+
+  const inputAmount = BigInt(amount);
+  const EXCHANGE_RATE = 2; // HARDCODED 
+  const outputAmount = (inputAmount * BigInt(Math.floor(EXCHANGE_RATE * 1000))) / BigInt(1000);
+
+  const mockQuote = {
+      srcChainId: parseInt(srcChainId),
+      dstChainId: parseInt(dstChainId),
+      srcTokenAddress,
+      dstTokenAddress,
+      srcAmount: amount,
+      dstAmount: outputAmount.toString(),
+      exchangeRate: EXCHANGE_RATE,
+      estimatedGas: '21000',
+      gasPrice: '20000000000',
+      fees: {
+          protocolFee: '0',
+          gasFee: '420000000000000'
+      },
+      route: [
+          {
+              from: srcTokenAddress,
+              to: dstTokenAddress,
+              exchange: 'AptosCrossChain'
+          }
+      ],
+      timestamp: new Date().toISOString(),
+      validUntil: new Date(Date.now() + 30000).toISOString()
+  };
+
+  res.json(mockQuote);
 });
 
 module.exports = router; 

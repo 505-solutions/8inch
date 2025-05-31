@@ -6,6 +6,7 @@ const process = env.config().parsed;
 
 const { Web3 } = require('web3');
 const { solidityPackedKeccak256, randomBytes, Contract, Wallet, JsonRpcProvider } = require('ethers');
+const axios = require('axios');
 
 // TODO write formal bug for this function being inaccessible
 function getRandomBytes32() {
@@ -50,117 +51,43 @@ const approveABI = [{
     "type": "function"
 }];
 
-(async () => {
+// Constants
+const SERVER_URL = 'http://localhost:3000';
+const amount = '1000000000000000000'; // 1 USDC (18 decimals)
 
-
-    const invert = false;
-
-    if (invert) {
-        const temp = srcChainId;
-        srcChainId = dstChainId;
-        dstChainId = temp;
-
-        const tempAddress = srcTokenAddress;
-        srcTokenAddress = dstTokenAddress;
-        dstTokenAddress = tempAddress;
-    }
-
-
-    // Approve tokens for spending.
-    // If you need to approve the tokens before posting an order, this code can be uncommented for first run.
-    // const provider = new JsonRpcProvider(nodeUrl);
-    // const tkn = new Contract(srcTokenAddress, approveABI, new Wallet(makerPrivateKey, provider));
-    // await tkn.approve(
-    //     '0x111111125421ca6dc452d289314280a0f8842a65', // aggregation router v6
-    //     (2n**256n - 1n) // unlimited allowance
-    // );
-
-    const params = {
-        srcChainId,
-        dstChainId,
-        srcTokenAddress,
-        dstTokenAddress,
-        amount: '1000000000000000000', // Adjust this to the correct decimal precision of the source token
-        enableEstimate: true,
-        walletAddress: makerAddress
-    };
-
-    sdk.getQuote(params).then(quote => {
-        const secretsCount = quote.getPreset().secretsCount;
-
-        const secrets = Array.from({ length: secretsCount }).map(() => getRandomBytes32());
-        const secretHashes = secrets.map(x => HashLock.hashSecret(x));
-
-        const hashLock = secretsCount === 1
-            ? HashLock.forSingleFill(secrets[0])
-            : HashLock.forMultipleFills(
-                secretHashes.map((secretHash, i) =>
-                    solidityPackedKeccak256(['uint64', 'bytes32'], [i, secretHash.toString()])
-                )
-            );
-
-        console.log("Received Fusion+ quote from 1inch API");
-
-        sdk.placeOrder(quote, {
-            walletAddress: makerAddress,
-            hashLock,
-            secretHashes
-        }).then(quoteResponse => {
-
-            const orderHash = quoteResponse.orderHash;
-
-            console.log(`Order successfully placed`);
-
-            const intervalId = setInterval(() => {
-                console.log(`Polling for fills until order status is set to "executed"...`);
-                sdk.getOrderStatus(orderHash).then(order => {
-                        if (order.status === 'executed') {
-                            console.log(`Order is complete. Exiting.`);
-                            clearInterval(intervalId);
-                        }
-                    }
-                ).catch(error =>
-                    console.error(`Error: ${JSON.stringify(error, null, 2)}`)
-                );
-
-                sdk.getReadyToAcceptSecretFills(orderHash)
-                    .then((fillsObject) => {
-                        if (fillsObject.fills.length > 0) {
-                            fillsObject.fills.forEach(fill => {
-                                sdk.submitSecret(orderHash, secrets[fill.idx])
-                                    .then(() => {
-                                        console.log(`Fill order found! Secret submitted: ${JSON.stringify(secretHashes[fill.idx], null, 2)}`);
-                                    })
-                                    .catch((error) => {
-                                        console.error(`Error submitting secret: ${JSON.stringify(error, null, 2)}`);
-                                    });
-                            });
-                        }
-                    })
-                    .catch((error) => {
-                        if (error.response) {
-                            // The request was made and the server responded with a status code
-                            // that falls out of the range of 2xx
-                            console.error('Error getting ready to accept secret fills:', {
-                                status: error.response.status,
-                                statusText: error.response.statusText,
-                                data: error.response.data
-                            });
-                        } else if (error.request) {
-                            // The request was made but no response was received
-                            console.error('No response received:', error.request);
-                        } else {
-                            // Something happened in setting up the request that triggered an Error
-                            console.error('Error', error.message);
-                        }
-                    });
-            }, 5000);
-        }).catch((error) => {
-            console.dir(error, { depth: null });
+async function getQuote() {
+    try {
+        const response = await axios.get(`${SERVER_URL}/relayer/getQuote`, {
+            params: {
+                srcChainId,
+                dstChainId,
+                srcTokenAddress,
+                dstTokenAddress,
+                amount
+            }
         });
-    }).catch((error) => {
-        console.dir(error, { depth: null });
-    });
+
+        console.log('Quote received:', response.data);
+        return response.data;
+    } catch (error) {
+        console.error('Error getting quote:', error.response?.data || error.message);
+        throw error;
+    }
+}
+
+(async () => {
+    try {
+        // Get quote from our server
+        const quote = await getQuote();
+        
+        // TODO: Implement order placement
+        // TODO: Implement order status checking
+        // TODO: Implement secret submission
+        
+        console.log('Quote received successfully. Other methods to be implemented.');
+    } catch (error) {
+        console.error('Error in main execution:', error);
+    }
 })().catch(error => {
     console.error("Error in main execution:", error);
 });

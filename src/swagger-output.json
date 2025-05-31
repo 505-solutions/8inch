@@ -1,0 +1,222 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Fusion Resolver API",
+    "description": "API for Fusion Resolver and Relayer endpoints",
+    "version": "1.0.0"
+  },
+  "host": "localhost:3000",
+  "basePath": "/",
+  "tags": [
+    {
+      "name": "Relayer",
+      "description": "Relayer endpoints for cross-chain operations"
+    },
+    {
+      "name": "Resolver",
+      "description": "Resolver endpoints for order management"
+    }
+  ],
+  "schemes": [
+    "http"
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/relayer/getQuote": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "srcChainId",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "dstChainId",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "srcTokenAddress",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "dstTokenAddress",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "amount",
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        }
+      }
+    },
+    "/resolver/orders": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "address",
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        }
+      }
+    },
+    "/resolver/execute": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "orderId": {
+                  "example": "any"
+                },
+                "signature": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Quote": {
+      "type": "object",
+      "properties": {
+        "srcChainId": {
+          "type": "number",
+          "example": 1
+        },
+        "dstChainId": {
+          "type": "number",
+          "example": 2
+        },
+        "srcTokenAddress": {
+          "type": "string",
+          "example": "0x..."
+        },
+        "dstTokenAddress": {
+          "type": "string",
+          "example": "0x..."
+        },
+        "srcAmount": {
+          "type": "string",
+          "example": "1000000000000000000"
+        },
+        "dstAmount": {
+          "type": "string",
+          "example": "2000000000000000000"
+        },
+        "exchangeRate": {
+          "type": "number",
+          "example": 2
+        },
+        "estimatedGas": {
+          "type": "string",
+          "example": "21000"
+        },
+        "gasPrice": {
+          "type": "string",
+          "example": "20000000000"
+        },
+        "fees": {
+          "type": "object",
+          "properties": {
+            "protocolFee": {
+              "type": "string",
+              "example": "0"
+            },
+            "gasFee": {
+              "type": "string",
+              "example": "420000000000000"
+            }
+          }
+        },
+        "route": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string",
+                "example": "0x..."
+              },
+              "to": {
+                "type": "string",
+                "example": "0x..."
+              },
+              "exchange": {
+                "type": "string",
+                "example": "AptosCrossChain"
+              }
+            }
+          }
+        },
+        "timestamp": {
+          "type": "string",
+          "example": "2024-03-21T12:00:00Z"
+        },
+        "validUntil": {
+          "type": "string",
+          "example": "2024-03-21T12:00:30Z"
+        }
+      }
+    },
+    "Order": {
+      "type": "object",
+      "properties": {
+        "orderId": {
+          "type": "string",
+          "example": "0x..."
+        },
+        "signature": {
+          "type": "string",
+          "example": "0x..."
+        }
+      }
+    }
+  }
+}
