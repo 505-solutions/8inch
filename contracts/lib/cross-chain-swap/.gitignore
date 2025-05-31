@@ -1,0 +1,20 @@
+artifacts
+cache
+node_modules
+coverage
+coverage.json
+build
+.coverage_contracts
+.coverage_artifacts
+.idea
+.env
+.env.deployment
+.DS_Store
+
+# foundry
+cache_forge
+out
+broadcast
+
+# zkSync
+zkout

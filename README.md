@@ -1,26 +1,46 @@
-# Fusion Resolver example
-In this repo you'll find an example of Resolver contract and some useful tests that show you how to execute orders with [FusionSDK](https://github.com/1inch/fusion-sdk)
-```
-Important Notice: This code is provided as an example only and is not audited for security.
-Deploying this code without an independent security review may lead to financial loss.
-1inch takes no responsibility for any damages, hacks, or security vulnerabilities arising from its use.
-```
-
-All tests are working on mainnet fork with real [Settlement](https://etherscan.io/address/0x8273f37417Da37c4A6c3995E82Cf442f87a25D9c) and [1inchRouterV6](https://etherscan.io/address/0x111111125421ca6dc452d289314280a0f8842a65) contracts
+# cross-chain-resolver-example
 
 ## Installation
-```
-yarn
-``` 
 
-## Run Tests
-```
-NODE_URL=https://pass-eth-node-url-here.com yarn test
+Install example deps
+
+```shell
+pnpm install
 ```
 
-If you want to run test which uses 1inch API, you should provide dev token as `ONE_INCH_API_KEY` param. It can be retrieved at https://portal.1inch.dev/dashboard
+Install [foundry](https://book.getfoundry.sh/getting-started/installation)
 
-## Examples
-- [Contract example](./contracts/ResolverExample.sol)
-- [Settle orders examples](./test/Settlement.ts)
+```shell
+curl -L https://foundry.paradigm.xyz | bash
+```
 
+Install contract deps
+
+```shell
+forge install
+```
+
+## Running
+
+To run tests you need to provide fork urls for Ethereum and Bsc
+
+```shell
+SRC_CHAIN_RPC=ETH_FORK_URL DST_CHAIN_RPC=BNB_FORK_URL pnpm test
+```
+
+### Public rpc
+
+| Chain    | Url                          |
+|----------|------------------------------|
+| Ethereum | https://eth.merkle.io        |
+| BSC      | wss://bsc-rpc.publicnode.com |
+
+## Test accounts
+
+### Available Accounts
+
+```
+(0) 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266" Owner of EscrowFactory
+(1) 0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8" User
+(2) 0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a: "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC" Resolver
+```

@@ -1,29 +1,13 @@
 {
+  "extends": "@1inch/tsconfig",
   "compilerOptions": {
-    "lib": [
-      "ES2021"
-    ],
-    "module": "commonjs",
-    "strict": false,
-    "target": "ES2021",
-    "resolveJsonModule": true,
-    "declaration": true,
-    "removeComments": true,
-    "esModuleInterop": true,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "allowSyntheticDefaultImports": true,
-    "outDir": "./dist",
-    "baseUrl": "./",
-    "incremental": true,
-    "skipLibCheck": true,
-    "allowJs": true
+    "outDir": "dist",
+    "rootDir": "src",
+    "baseUrl": ".",
+    "paths": {
+      "*": ["node_modules/*"]
+    }
   },
-  "include": [
-    "test"
-  ],
-  "files": [
-    "./hardhat.config.ts",
-    "node_modules/@ethereum-waffle/jest/src/types.d.ts"
-  ]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
 }
