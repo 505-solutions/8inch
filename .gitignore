@@ -76,3 +76,7 @@ target/
 *.test
 *.out
 go.work
+
+/artifacts
+/typechain-types
+/cache

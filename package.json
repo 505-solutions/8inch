@@ -20,7 +20,9 @@
         "lint:sol:fix": "solhint --max-warnings 0 \"contracts/**/*.sol\" --fix",
         "lint": "yarn lint:js && yarn lint:sol",
         "lint:fix": "yarn lint:js:fix && yarn lint:sol:fix",
-        "test": "hardhat test"
+        "test": "hardhat test",
+        "start": "node src/server.js",
+        "dev": "nodemon src/server.js"
     },
     "dependencies": {
         "@1inch/fusion-sdk": "2",
