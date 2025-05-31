@@ -22,8 +22,8 @@ router.get('/getQuote', (req, res) => {
   const outputAmount = (inputAmount * BigInt(Math.floor(EXCHANGE_RATE * 1000))) / BigInt(1000);
 
   const mockQuote = {
-      srcChainId: parseInt(srcChainId),
-      dstChainId: parseInt(dstChainId),
+      srcChainId: srcChainId,
+      dstChainId: dstChainId,
       srcTokenAddress,
       dstTokenAddress,
       srcAmount: amount,

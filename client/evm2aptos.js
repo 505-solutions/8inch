@@ -5,9 +5,9 @@ require('dotenv').config();
 
 // Constants
 const SERVER_URL = 'http://localhost:3000';
-const srcChainId = 42161; // Arbitrum
-const dstChainId = 1;     // Aptos
-const srcTokenAddress = '0xaf88d065e77c8cC2239327C5EDb3A432268e5831'; // USDC on Arbitrum
+const srcChainId = "ETH::1"; // Arbitrum
+const dstChainId = "APTOS::1";     // Aptos
+const srcTokenAddress = '0x8EB8a3b98659Cce290402893d0123abb75E3ab28'; // WETH on Ethereum
 const dstTokenAddress = '0x1::coin::USDC'; // USDC on Aptos
 const amount = '1000000000000000000'; // 1 USDC (18 decimals)
 
@@ -41,10 +41,19 @@ async function main() {
     try {
         // Get quote from our server
         const quote = await getQuote();
+        const orderSecret = getRandomBytes32();
+        const hashSecret = solidityPackedKeccak256(['bytes32'], [orderSecret]);
+
+        console.log('Order secret:', orderSecret);
+        console.log('Hash secret:', hashSecret);
+
+        // Call factory contract and escrow the funds
         
-        // TODO: Implement order placement
-        // TODO: Implement order status checking
-        // TODO: Implement secret submission
+        // Call the resolver to make counter deposits
+        // Poll relayer when it is safe to share the secret / check the blockchain myself
+        // Share secret with relayer, call the resolver
+        // Withdraw for maker
+        // Withdraw for taker
         
         console.log('Quote received successfully. Other methods to be implemented.');
     } catch (error) {
