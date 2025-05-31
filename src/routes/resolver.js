@@ -1,5 +1,11 @@
 const express = require('express');
+const { ethers } = require('ethers');
+const { Web3 } = require('web3');
 const router = express.Router();
+
+// Initialize providers
+const ethersProvider = new ethers.JsonRpcProvider(process.env.NODE_URL);
+const web3 = new Web3(process.env.NODE_URL);
 
 /**
  * @swagger
@@ -31,9 +37,24 @@ const router = express.Router();
  *       400:
  *         description: Invalid address
  */
-router.get('/orders', (req, res) => {
-  // Implementation here
-  res.json({ message: 'Get resolver orders' });
+router.get('/orders', async (req, res) => {
+  try {
+    const { address } = req.query;
+    
+    // Example using ethers.js
+    const balance = await ethersProvider.getBalance(address);
+    
+    // Example using web3.js
+    const blockNumber = await web3.eth.getBlockNumber();
+    
+    res.json({ 
+      message: 'Get resolver orders',
+      balance: ethers.formatEther(balance),
+      currentBlock: blockNumber
+    });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
 /**
@@ -64,9 +85,27 @@ router.get('/orders', (req, res) => {
  *       404:
  *         description: Order not found
  */
-router.post('/execute', (req, res) => {
-  // Implementation here
-  res.json({ message: 'Execute order through resolver' });
+router.post('/execute', async (req, res) => {
+  try {
+    const { orderId, signature } = req.body;
+    
+    // Example using ethers.js for transaction
+    const tx = {
+      to: process.env.RESOLVER_CONTRACT_ADDRESS,
+      data: signature,
+      value: ethers.parseEther('0')
+    };
+    
+    // Example using web3.js for gas estimation
+    const gasEstimate = await web3.eth.estimateGas(tx);
+    
+    res.json({ 
+      message: 'Execute order through resolver',
+      gasEstimate: gasEstimate.toString()
+    });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
 module.exports = router; 
