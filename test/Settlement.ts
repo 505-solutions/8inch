@@ -31,6 +31,10 @@ describe('Settle Orders', async function () {
     let resolverAddress: string
     const [resolverEOA, userA, userB] = createUsers()
 
+    console.log(resolverEOA.address)
+    console.log(userA.address)
+    console.log(userB.address)
+
     const whitelist = [] as {address: Address; allowFrom: bigint}[]
     before(async function () {
         const chainId = await getChainId()

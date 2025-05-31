@@ -23,10 +23,11 @@ const config: HardhatUserConfig = {
         hardhat: {
             forking: {
                 enabled: true,
-                url: process.env.NODE_URL
+                url: process.env.NODE_URL,
+                blockNumber: 19990037
+
             },
             chainId: 1,
-            hardfork: 'shanghai'
         },
         localhost: {}
     }
