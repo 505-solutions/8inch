@@ -21,8 +21,9 @@
         "lint": "yarn lint:js && yarn lint:sol",
         "lint:fix": "yarn lint:js:fix && yarn lint:sol:fix",
         "test": "hardhat test",
-        "start": "node src/server.js",
-        "dev": "nodemon src/server.js"
+        "start": "ts-node src/server.ts",
+        "dev": "nodemon --exec ts-node src/server.ts",
+        "build": "tsc"
     },
     "dependencies": {
         "@1inch/fusion-sdk": "2",
@@ -30,7 +31,10 @@
         "@1inch/permit-signed-approvals-utils": "^1.4.8",
         "@1inch/solidity-utils": "3.8.0",
         "@metamask/eth-sig-util": "^4.0.1",
-        "@openzeppelin/contracts": "5.0.1"
+        "@openzeppelin/contracts": "5.0.1",
+        "nodemon": "^3.1.10",
+        "swagger-jsdoc": "^6.2.8",
+        "swagger-ui-express": "^5.0.1"
     },
     "devDependencies": {
         "@ethersproject/abi": "5.4.0",
