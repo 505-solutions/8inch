@@ -11,29 +11,14 @@ export class Resolver {
     ) {}
 
     public deploySrc(
-        chainId: number,
-        order: Sdk.CrossChainOrder,
-        signature: string,
-        takerTraits: Sdk.TakerTraits,
-        amount: bigint,
-        hashLock = order.escrowExtension.hashLockInfo
+        immutables: Sdk.Immutables
     ): TransactionRequest {
-        const {r, yParityAndS: vs} = Signature.from(signature)
-        const {args, trait} = takerTraits.encode()
-        const immutables = order.toSrcImmutables(chainId, new Sdk.Address(this.srcAddress), amount, hashLock)
-
         return {
             to: this.srcAddress,
             data: this.iface.encodeFunctionData('deploySrc', [
                 immutables.build(),
-                order.build(),
-                r,
-                vs,
-                amount,
-                trait,
-                args
             ]),
-            value: order.escrowExtension.srcSafetyDeposit
+            value: immutables.safetyDeposit
         }
     }
 

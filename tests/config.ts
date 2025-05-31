@@ -25,6 +25,7 @@ export const config = {
             limitOrderProtocol: '0x111111125421ca6dc452d289314280a0f8842a65',
             wrappedNative: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
             ownerPrivateKey: '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
+            blockNumber: 19991288,
             tokens: {
                 USDC: {
                     address: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
@@ -39,6 +40,7 @@ export const config = {
             limitOrderProtocol: '0x111111125421ca6dc452d289314280a0f8842a65',
             wrappedNative: '0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c',
             ownerPrivateKey: '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
+            blockNumber: 29621722,
             tokens: {
                 USDC: {
                     address: '0x8965349fb649a33a30cbfda057d8ec2c48abe2a2',

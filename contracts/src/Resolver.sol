@@ -4,9 +4,6 @@ pragma solidity 0.8.23;
 
 import {Ownable} from "openzeppelin-contracts/contracts/access/Ownable.sol";
 
-import {IOrderMixin} from "limit-order-protocol/contracts/interfaces/IOrderMixin.sol";
-import {TakerTraits} from "limit-order-protocol/contracts/libraries/TakerTraitsLib.sol";
-
 import {IResolverExample} from "../lib/cross-chain-swap/contracts/interfaces/IResolverExample.sol";
 import {RevertReasonForwarder} from "../lib/cross-chain-swap/lib/solidity-utils/contracts/libraries/RevertReasonForwarder.sol";
 import {IEscrowFactory} from "../lib/cross-chain-swap/contracts/interfaces/IEscrowFactory.sol";
@@ -32,11 +29,9 @@ contract Resolver is Ownable {
     error LengthMismatch();
 
     IEscrowFactory private immutable _FACTORY;
-    IOrderMixin private immutable _LOP;
 
-    constructor(IEscrowFactory factory, IOrderMixin lop, address initialOwner) Ownable(initialOwner) {
+    constructor(IEscrowFactory factory, address initialOwner) Ownable(initialOwner) {
         _FACTORY = factory;
-        _LOP = lop;
     }
 
     receive() external payable {} // solhint-disable-line no-empty-blocks
@@ -45,13 +40,7 @@ contract Resolver is Ownable {
      * @notice See {IResolverExample-deploySrc}.
      */
     function deploySrc(
-        IBaseEscrow.Immutables calldata immutables,
-        IOrderMixin.Order calldata order,
-        bytes32 r,
-        bytes32 vs,
-        uint256 amount,
-        TakerTraits takerTraits,
-        bytes calldata args
+        IBaseEscrow.Immutables calldata immutables
     ) external payable onlyOwner {
 
         IBaseEscrow.Immutables memory immutablesMem = immutables;
@@ -60,11 +49,6 @@ contract Resolver is Ownable {
 
         (bool success,) = address(computed).call{value: immutablesMem.safetyDeposit}("");
         if (!success) revert IBaseEscrow.NativeTokenSendingFailure();
-
-        // _ARGS_HAS_TARGET = 1 << 251
-        takerTraits = TakerTraits.wrap(TakerTraits.unwrap(takerTraits) | uint256(1 << 251));
-        bytes memory argsMem = abi.encodePacked(computed, args);
-        _LOP.fillOrderArgs(order, r, vs, amount, takerTraits, argsMem);
     }
 
     /**
