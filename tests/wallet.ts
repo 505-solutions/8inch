@@ -93,10 +93,20 @@ export class Wallet {
     }
 
     async send(param: TransactionRequest): Promise<{txHash: string; blockTimestamp: bigint; blockHash: string}> {
-        const res = await this.signer.sendTransaction({...param, gasLimit: 10_000_000, from: this.getAddress()})
+        const tx = {
+            ...param,
+            gasLimit: 10_000_000,
+            from: await this.getAddress()
+        }
+        
+        const res = await this.signer.sendTransaction(tx)
+        
         const receipt = await res.wait(1)
-
-        if (receipt && receipt.status) {
+        if (!receipt) {
+            throw new Error('Transaction failed: no receipt received')
+        }
+        
+        if (receipt.status) {
             return {
                 txHash: receipt.hash,
                 blockTimestamp: BigInt((await res.getBlock())!.timestamp),
@@ -104,6 +114,6 @@ export class Wallet {
             }
         }
 
-        throw new Error((await receipt?.getResult()) || 'unknown error')
+        throw new Error((await receipt.getResult()) || 'unknown error')
     }
 }

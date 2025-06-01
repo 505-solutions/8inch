@@ -59,9 +59,10 @@ export class Resolver {
         secret: string,
         immutables: Sdk.Immutables
     ): TransactionRequest {
+        const encoding = this.iface.encodeFunctionData('withdraw', [escrow.toString(), secret, immutables.build()])
         return {
             to: side === 'src' ? this.srcAddress : this.dstAddress,
-            data: this.iface.encodeFunctionData('withdraw', [escrow.toString(), secret, immutables.build()])
+            data: encoding
         }
     }
 
