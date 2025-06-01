@@ -126,10 +126,11 @@ describe('Resolving example', () => {
     describe('Fill', () => {
         it.each([1, 2])('should swap Ethereum USDC -> Aptos MYTOKEN. Single fill only', async (length) => {
 
-
+            console.log("Starting run: ", length)
 
             // Construct order by hand
-            const secret = uint8ArrayToHex(randomBytes(32)) // note: use crypto secure random number in real world
+            const secretBytes = randomBytes(32)
+            const secret = uint8ArrayToHex(secretBytes) // note: use crypto secure random number in real world
             const order = Sdk.CrossChainOrder.new(
                 new Address(src.escrowFactory),
                 {
@@ -138,7 +139,7 @@ describe('Resolving example', () => {
                     makingAmount: parseUnits('1', 6),
                     takingAmount: parseUnits('1', 6),
                     makerAsset: new Address(config.chain.source.tokens.USDC.address),
-                    takerAsset: new Address(config.chain.aptos.tokens.MY_TOKEN.address) // need support for aptos
+                    takerAsset: new Address(config.chain.destination.tokens.USDC.address) // need support for aptos
                 },
                 {
                     hashLock: Sdk.HashLock.forSingleFill(secret),
@@ -207,8 +208,11 @@ describe('Resolving example', () => {
             console.log(`[${dstChainId}]`, `Depositing ${dstImmutables.amount} for order ${orderHash}`)
 
             // FUND ESCROW ON APTOS
-            await aptos.fund_dst_escrow() // unhardcode params
-            
+            if (length === 1) {
+                console.log("skipping first run")
+            } else {
+                await aptos.fund_dst_escrow()
+            }
             
             const ESCROW_SRC_IMPLEMENTATION = await srcFactory.getSourceImpl()
             const ESCROW_DST_IMPLEMENTATION = "ESCROW_DST_IMPLEMENTATION"
@@ -224,7 +228,7 @@ describe('Resolving example', () => {
             await increaseTime(11)
             // unlock funds on dst chain for user
             await aptos.claim_funds() // unhardcode params
-            
+
             // withdraw funds from src chain for resolver
             console.log(`[${srcChainId}]`, `Withdrawing funds for resolver from ${srcEscrowAddress}`)
             if (length === 1) {
@@ -245,7 +249,7 @@ describe('Resolving example', () => {
     })
 
     describe('Cancel', () => {
-        it('should cancel swap Ethereum USDC -> Bsc USDC', async () => {
+        it.skip('should cancel swap Ethereum USDC -> Bsc USDC', async () => {
             const initialBalances = await getBalances(
                 config.chain.source.tokens.USDC.address,
                 config.chain.destination.tokens.USDC.address

@@ -47,7 +47,6 @@ export const config = {
                     donor: '0x55625547c27ed94dde4184151d8a688d39615ace5d389b7fa4f0dbf887819b7c'
                 }
             }    
-        }
         },
         destination: {
             chainId: Sdk.NetworkEnum.BINANCE,
