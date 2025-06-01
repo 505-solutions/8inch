@@ -125,7 +125,7 @@ describe('Resolving example', () => {
 
     // eslint-disable-next-line max-lines-per-function
     describe('Fill', () => {
-        it.skip('should swap Base USDC -> Aptos MYTOKEN. Single fill only (run %d)', async (runNumber) => {
+        it.each([1, 2])('should swap Base USDC -> Aptos MYTOKEN. Single fill only (run %d)', async (runNumber) => {
             console.log("Starting run: ", runNumber)
 
             // Construct order by hand
@@ -252,7 +252,7 @@ describe('Resolving example', () => {
     })
 
     describe('Cancel', () => {
-        it('should cancel swap Base USDC -> Aptos MYTOKEN', async () => {
+        it.skip('should cancel swap Base USDC -> Aptos MYTOKEN', async () => {
 
             // User creates order
             const hashLock = Sdk.HashLock.forSingleFill(uint8ArrayToHex(randomBytes(32))) // note: use crypto secure random number in real world
