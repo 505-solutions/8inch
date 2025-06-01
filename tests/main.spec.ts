@@ -23,6 +23,7 @@ import {Resolver} from './resolver'
 import {EscrowFactory} from './escrow-factory'
 import factoryContract from '../dist/contracts/TestEscrowFactory.sol/TestEscrowFactory.json'
 import resolverContract from '../dist/contracts/Resolver.sol/Resolver.json'
+import * as aptos from './aptos'
 
 const {Address} = Sdk
 
@@ -204,38 +205,27 @@ describe('Resolving example', () => {
                 .withTaker(new Address(resolverContract.dstAddress))
 
             console.log(`[${dstChainId}]`, `Depositing ${dstImmutables.amount} for order ${orderHash}`)
-            // resolver on APTOS
-            
-            
-            const {txHash: dstDepositHash, blockTimestamp: dstDeployedAt} = await dstChainResolver.send(
-                resolverContract.deployDst(dstImmutables)
-            )
-            console.log(`[${dstChainId}]`, `Created dst deposit for order ${orderHash} in tx ${dstDepositHash}`)
 
+            // FUND ESCROW ON APTOS
+            await aptos.fund_dst_escrow() // unhardcode params
+            
+            
             const ESCROW_SRC_IMPLEMENTATION = await srcFactory.getSourceImpl()
-            const ESCROW_DST_IMPLEMENTATION = await dstFactory.getDestinationImpl()
+            const ESCROW_DST_IMPLEMENTATION = "ESCROW_DST_IMPLEMENTATION"
 
             const srcEscrowAddress = new Sdk.EscrowFactory(new Address(src.escrowFactory)).getSrcEscrowAddress(
                 srcEscrowEvent[0],
                 ESCROW_SRC_IMPLEMENTATION
             )
 
-            const dstEscrowAddress = new Sdk.EscrowFactory(new Address(dst.escrowFactory)).getDstEscrowAddress(
-                srcEscrowEvent[0],
-                srcEscrowEvent[1],
-                dstDeployedAt,
-                new Address(resolverContract.dstAddress),
-                ESCROW_DST_IMPLEMENTATION
-            )
+            // relayer signals it's safe to share secret
+            // user shares secret with relayer -> resolver unlocks funds on dst chain
 
             await increaseTime(11)
-            if (length === 1) {
-                await expect(dstChainResolver.send(resolverContract.withdraw('dst', dstEscrowAddress, secret, dstImmutables.withDeployedAt(dstDeployedAt)))
-            ).rejects.toThrow()
-            } else {
-                await dstChainResolver.send(resolverContract.withdraw('dst', dstEscrowAddress, secret, dstImmutables.withDeployedAt(dstDeployedAt)))
-            }
-                
+            // unlock funds on dst chain for user
+            await aptos.claim_funds() // unhardcode params
+            
+            // withdraw funds from src chain for resolver
             console.log(`[${srcChainId}]`, `Withdrawing funds for resolver from ${srcEscrowAddress}`)
             if (length === 1) {
                 await expect(srcChainResolver.send(resolverContract.withdraw('src', srcEscrowAddress, secret, srcEscrowEvent[0]) )).rejects.toThrow()

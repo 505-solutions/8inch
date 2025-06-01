@@ -37,9 +37,7 @@ async function anounce_order() {
   const expiresInSecs = 3_600; // 1 hour
 
   const stringBytes = ethers.toUtf8Bytes("my_secret_password_for_swap_test");
-  console.log("stringBytesHash", ethers.keccak256(stringBytes));
   const secretHashHex = hexToUint8Array(ethers.keccak256(stringBytes));
-  console.log("secretHashHex", secretHashHex);
   // --------------------------------------------------------------------
 
   // Build the txn payload
@@ -124,8 +122,8 @@ async function claim_funds() {
     "0x55625547c27ed94dde4184151d8a688d39615ace5d389b7fa4f0dbf887819b7c::my_token::SimpleToken"; // generic type arg
 
   const order_id = 0;
-  const secret = "my_secret_password_for_swap_test";
-  const secretVec8 = hexToUint8Array(ethers.keccak256(secret));
+  const secret = ethers.toUtf8Bytes("my_secret_password_for_swap_test");
+  //   const secretVec8 = hexToUint8Array(ethers.keccak256(secret));
   // --------------------------------------------------------------------
 
   // Build the txn payload
@@ -136,7 +134,7 @@ async function claim_funds() {
     // 1) generic type arguments
     type_arguments: [SRC_COIN_TYPE],
     // 2) the four explicit Move parameters, IN ORDER, all as strings or hex
-    arguments: [order_id.toString(), secretVec8],
+    arguments: [order_id.toString(), secret],
   };
 
   //   console.log("payload", payload);
@@ -182,9 +180,11 @@ async function signAndSubmit(payload: any) {
 
 (async () => {
   //   await initialize_swap_ledger();
-  await anounce_order();
+  //   await anounce_order();
 
   // await fund_src_escrow();
+
+  await claim_funds();
 })();
 
 function hexToUint8Array(hex: string): Uint8Array {
@@ -201,4 +201,14 @@ function hexToUint8Array(hex: string): Uint8Array {
     byteArray[i] = parseInt(hex.substring(i * 2, i * 2 + 2), 16);
   }
   return byteArray;
+}
+
+
+export {
+    fund_dst_escrow,
+    claim_funds,
+    cancel_swap,
+    fund_src_escrow,
+    anounce_order,
+    initialize_swap_ledger,
 }
