@@ -15,11 +15,14 @@ const account = AptosAccount.fromAptosAccountObject({
 const client = new AptosClient(NODE);
 
 async function initialize_swap_ledger() {
+  const SRC_COIN_TYPE =
+    "0x55625547c27ed94dde4184151d8a688d39615ace5d389b7fa4f0dbf887819b7c::my_token::SimpleToken"; // generic type arg
+
   const payload = {
     type: "entry_function_payload",
     function:
-      "0x55625547c27ed94dde4184151d8a688d39615ace5d389b7fa4f0dbf887819b7c::swap::initialize_swap_ledger",
-    type_arguments: [],
+      "0x55625547c27ed94dde4184151d8a688d39615ace5d389b7fa4f0dbf887819b7c::swap_v2::initialize_swap_ledger",
+    type_arguments: [SRC_COIN_TYPE],
     arguments: [],
   };
   await signAndSubmit(payload);
@@ -43,7 +46,7 @@ async function anounce_order() {
   const payload = {
     type: "entry_function_payload",
     function:
-      "0x55625547c27ed94dde4184151d8a688d39615ace5d389b7fa4f0dbf887819b7c::swap::announce_order",
+      "0x55625547c27ed94dde4184151d8a688d39615ace5d389b7fa4f0dbf887819b7c::swap_v2::announce_order",
     // 1) generic type arguments
     type_arguments: [SRC_COIN_TYPE],
     // 2) the four explicit Move parameters, IN ORDER, all as strings or hex
@@ -72,11 +75,42 @@ async function fund_src_escrow() {
   const payload = {
     type: "entry_function_payload",
     function:
-      "0x55625547c27ed94dde4184151d8a688d39615ace5d389b7fa4f0dbf887819b7c::swap::fund_src_escrow",
+      "0x55625547c27ed94dde4184151d8a688d39615ace5d389b7fa4f0dbf887819b7c::swap_v2::fund_src_escrow",
     // 1) generic type arguments
     type_arguments: [SRC_COIN_TYPE],
     // 2) the four explicit Move parameters, IN ORDER, all as strings or hex
     arguments: [order_id.toString()],
+  };
+
+  //   console.log("payload", payload);
+
+  await signAndSubmit(payload);
+}
+
+async function fund_dst_escrow() {
+  // -------------- user-supplied values --------------------------------
+  const SRC_COIN_TYPE =
+    "0x55625547c27ed94dde4184151d8a688d39615ace5d389b7fa4f0dbf887819b7c::my_token::SimpleToken"; // generic type arg
+
+  const dst_amount = 10_000;
+  const expiration_duration_secs = 3_600;
+  const secret = "my_secret_password_for_swap_test";
+  const secret_hash = hexToUint8Array(ethers.keccak256(secret));
+  // --------------------------------------------------------------------
+
+  // Build the txn payload
+  const payload = {
+    type: "entry_function_payload",
+    function:
+      "0x55625547c27ed94dde4184151d8a688d39615ace5d389b7fa4f0dbf887819b7c::swap_v2::fund_dst_escrow",
+    // 1) generic type arguments
+    type_arguments: [SRC_COIN_TYPE],
+    // 2) the four explicit Move parameters, IN ORDER, all as strings or hex
+    arguments: [
+      dst_amount.toString(),
+      expiration_duration_secs.toString(),
+      secret_hash,
+    ],
   };
 
   //   console.log("payload", payload);
@@ -98,7 +132,7 @@ async function claim_funds() {
   const payload = {
     type: "entry_function_payload",
     function:
-      "0x55625547c27ed94dde4184151d8a688d39615ace5d389b7fa4f0dbf887819b7c::swap::claim_funds",
+      "0x55625547c27ed94dde4184151d8a688d39615ace5d389b7fa4f0dbf887819b7c::swap_v2::claim_funds",
     // 1) generic type arguments
     type_arguments: [SRC_COIN_TYPE],
     // 2) the four explicit Move parameters, IN ORDER, all as strings or hex
@@ -110,42 +144,27 @@ async function claim_funds() {
   await signAndSubmit(payload);
 }
 
-async function registerIfNeeded() {
-  try {
-    await client.getAccountResource(
-      account.address(),
-      `0x${account.address().hex()}::coin::CoinStore<0x${account
-        .address()
-        .hex()}::my_token::MyToken>`
-    );
-  } catch {
-    const payload = {
-      type: "entry_function_payload",
-      function: "0x1::coin::register",
-      type_arguments: [`0x${account.address().hex()}::my_token::MyToken`],
-      arguments: [],
-    };
-    await signAndSubmit(payload);
-  }
-}
+async function cancel_swap() {
+  // -------------- user-supplied values --------------------------------
+  const SRC_COIN_TYPE =
+    "0x55625547c27ed94dde4184151d8a688d39615ace5d389b7fa4f0dbf887819b7c::my_token::SimpleToken"; // generic type arg
 
-async function deposit(amount: number) {
+  const order_id = 0;
+  // --------------------------------------------------------------------
+
+  // Build the txn payload
   const payload = {
     type: "entry_function_payload",
-    function: `0x${account.address().hex()}::vault::deposit`,
-    type_arguments: [],
-    arguments: [amount.toString()],
+    function:
+      "0x55625547c27ed94dde4184151d8a688d39615ace5d389b7fa4f0dbf887819b7c::swap_v2::cancel_swap",
+    // 1) generic type arguments
+    type_arguments: [SRC_COIN_TYPE],
+    // 2) the four explicit Move parameters, IN ORDER, all as strings or hex
+    arguments: [order_id.toString()],
   };
-  await signAndSubmit(payload);
-}
 
-async function withdrawAll() {
-  const payload = {
-    type: "entry_function_payload",
-    function: `0x${account.address().hex()}::vault::withdraw_all`,
-    type_arguments: [],
-    arguments: [],
-  };
+  //   console.log("payload", payload);
+
   await signAndSubmit(payload);
 }
 
@@ -162,14 +181,10 @@ async function signAndSubmit(payload: any) {
 }
 
 (async () => {
-  //   await registerIfNeeded();
-  //   await deposit(500000); // 0.5 MYT
-  //   await withdrawAll();
-
   //   await initialize_swap_ledger();
-  //   await anounce_order();
+  await anounce_order();
 
-  await fund_src_escrow();
+  // await fund_src_escrow();
 })();
 
 function hexToUint8Array(hex: string): Uint8Array {

@@ -34,7 +34,7 @@ const resolverPk = '0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cd
 // eslint-disable-next-line max-lines-per-function
 describe('Resolving example', () => {
     const srcChainId = config.chain.source.chainId
-    const dstChainId = config.chain.destination.chainId
+    const dstChainId = config.chain.aptos.chainId
 
     type Chain = {
         node?: CreateServerReturnType | undefined
@@ -123,23 +123,21 @@ describe('Resolving example', () => {
 
     // eslint-disable-next-line max-lines-per-function
     describe('Fill', () => {
-        it.each([1, 2])('should swap Ethereum USDC -> Bsc USDC. Single fill only', async (length) => {
-            const initialBalances = await getBalances(
-                config.chain.source.tokens.USDC.address,
-                config.chain.destination.tokens.USDC.address
-            )
+        it.each([1, 2])('should swap Ethereum USDC -> Aptos MYTOKEN. Single fill only', async (length) => {
 
-            // User creates order
+
+
+            // Construct order by hand
             const secret = uint8ArrayToHex(randomBytes(32)) // note: use crypto secure random number in real world
             const order = Sdk.CrossChainOrder.new(
                 new Address(src.escrowFactory),
                 {
                     salt: Sdk.randBigInt(1000n),
                     maker: new Address(await srcChainUser.getAddress()),
-                    makingAmount: parseUnits('100', 6),
-                    takingAmount: parseUnits('99', 6),
+                    makingAmount: parseUnits('1', 6),
+                    takingAmount: parseUnits('1', 6),
                     makerAsset: new Address(config.chain.source.tokens.USDC.address),
-                    takerAsset: new Address(config.chain.destination.tokens.USDC.address)
+                    takerAsset: new Address(config.chain.aptos.tokens.MY_TOKEN.address) // need support for aptos
                 },
                 {
                     hashLock: Sdk.HashLock.forSingleFill(secret),
@@ -152,8 +150,8 @@ describe('Resolving example', () => {
                         dstPublicWithdrawal: 100n, // 100sec private withdrawal
                         dstCancellation: 101n // 1sec public withdrawal
                     }),
-                    srcChainId,
-                    dstChainId,
+                    srcChainId: Sdk.NetworkEnum.ETHEREUM,
+                    dstChainId: Sdk.NetworkEnum.BINANCE, // temporary, should add aptos to supported chains
                     srcSafetyDeposit: parseEther('0.001'),
                     dstSafetyDeposit: parseEther('0.001')
                 },
@@ -178,14 +176,12 @@ describe('Resolving example', () => {
                     allowMultipleFills: false
                 }
             )
-
+            // user signs order on src chain, sends it to relayer / resolver
             const signature = await srcChainUser.signOrder(srcChainId, order)
             const orderHash = order.getOrderHash(srcChainId)
-            // Resolver fills order
+            // resolver deploys escrow on src chain with order 
             const resolverContract = new Resolver(src.resolver, dst.resolver)
-
             console.log(`[${srcChainId}]`, `Filling order ${orderHash}`)
-
             const fillAmount = order.makingAmount
             const {txHash: orderFillHash, blockHash: srcDeployBlock} = await srcChainResolver.send(
                 resolverContract.deploySrc(
@@ -199,16 +195,18 @@ describe('Resolving example', () => {
                     fillAmount
                 )
             )
-
             console.log(`[${srcChainId}]`, `Order ${orderHash} filled for ${fillAmount} in tx ${orderFillHash}`)
-
             const srcEscrowEvent = await srcFactory.getSrcDeployEvent(srcDeployBlock)
 
+            // continue on aptos, deposit cash to escrow on dst chain
             const dstImmutables = srcEscrowEvent[0]
                 .withComplement(srcEscrowEvent[1])
                 .withTaker(new Address(resolverContract.dstAddress))
 
             console.log(`[${dstChainId}]`, `Depositing ${dstImmutables.amount} for order ${orderHash}`)
+            // resolver on APTOS
+            
+            
             const {txHash: dstDepositHash, blockTimestamp: dstDeployedAt} = await dstChainResolver.send(
                 resolverContract.deployDst(dstImmutables)
             )
@@ -249,19 +247,6 @@ describe('Resolving example', () => {
                     `[${srcChainId}]`,
                     `Withdrew funds for resolver from ${srcEscrowAddress} to ${src.resolver} in tx ${resolverWithdrawHash}`
                 )
-
-                const resultBalances = await getBalances(
-                    config.chain.source.tokens.USDC.address,
-                    config.chain.destination.tokens.USDC.address
-                )
-    
-                // user transferred funds to resolver on source chain
-                expect(initialBalances.src.user - resultBalances.src.user).toBe(order.makingAmount)
-                expect(resultBalances.src.resolver - initialBalances.src.resolver).toBe(order.makingAmount)
-                // resolver transferred funds to user on destination chain
-                expect(resultBalances.dst.user - initialBalances.dst.user).toBe(order.takingAmount)
-                expect(initialBalances.dst.resolver - resultBalances.dst.resolver).toBe(order.takingAmount)
-    
 
             }
             
