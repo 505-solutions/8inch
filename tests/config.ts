@@ -33,6 +33,20 @@ export const config = {
                 }
             }
         },
+        base: {
+            chainId: Sdk.NetworkEnum.COINBASE,
+            url: fromEnv.DST_CHAIN_RPC,
+            createFork: fromEnv.DST_CHAIN_CREATE_FORK,
+            limitOrderProtocol: '0x111111125421ca6dc452d289314280a0f8842a65',
+            wrappedNative: '0x4200000000000000000000000000000000000006',
+            ownerPrivateKey: '0x123',
+            tokens: {
+                USDC: {
+                    address: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+                    donor: '0x4B16c5dE96EB2117bBE5fd171E4d203624B014aa'
+                }
+            }
+        },
         aptos: {
             chainId: "APTOS",
             url: "https://fullnode.mainnet.aptoslabs.com/v1",
