@@ -21,7 +21,7 @@ async function initialize_swap_ledger() {
   const payload = {
     type: "entry_function_payload",
     function:
-      "0x55625547c27ed94dde4184151d8a688d39615ace5d389b7fa4f0dbf887819b7c::swap_v2::initialize_swap_ledger",
+      "0x55625547c27ed94dde4184151d8a688d39615ace5d389b7fa4f0dbf887819b7c::swap_v3::initialize_swap_ledger",
     type_arguments: [SRC_COIN_TYPE],
     arguments: [],
   };
@@ -37,16 +37,14 @@ async function anounce_order() {
   const expiresInSecs = 3_600; // 1 hour
 
   const stringBytes = ethers.toUtf8Bytes("my_secret_password_for_swap_test");
-  console.log("stringBytesHash", ethers.keccak256(stringBytes));
   const secretHashHex = hexToUint8Array(ethers.keccak256(stringBytes));
-  console.log("secretHashHex", secretHashHex);
   // --------------------------------------------------------------------
 
   // Build the txn payload
   const payload = {
     type: "entry_function_payload",
     function:
-      "0x55625547c27ed94dde4184151d8a688d39615ace5d389b7fa4f0dbf887819b7c::swap_v2::announce_order",
+      "0x55625547c27ed94dde4184151d8a688d39615ace5d389b7fa4f0dbf887819b7c::swap_v3::announce_order",
     // 1) generic type arguments
     type_arguments: [SRC_COIN_TYPE],
     // 2) the four explicit Move parameters, IN ORDER, all as strings or hex
@@ -63,47 +61,23 @@ async function anounce_order() {
   await signAndSubmit(payload);
 }
 
-async function fund_src_escrow() {
-  // -------------- user-supplied values --------------------------------
-  const SRC_COIN_TYPE =
-    "0x55625547c27ed94dde4184151d8a688d39615ace5d389b7fa4f0dbf887819b7c::my_token::SimpleToken"; // generic type arg
-
-  const order_id = 0;
-  // --------------------------------------------------------------------
-
-  // Build the txn payload
-  const payload = {
-    type: "entry_function_payload",
-    function:
-      "0x55625547c27ed94dde4184151d8a688d39615ace5d389b7fa4f0dbf887819b7c::swap_v2::fund_src_escrow",
-    // 1) generic type arguments
-    type_arguments: [SRC_COIN_TYPE],
-    // 2) the four explicit Move parameters, IN ORDER, all as strings or hex
-    arguments: [order_id.toString()],
-  };
-
-  //   console.log("payload", payload);
-
-  await signAndSubmit(payload);
-}
-
 async function fund_dst_escrow() {
   // -------------- user-supplied values --------------------------------
   const SRC_COIN_TYPE =
     "0x55625547c27ed94dde4184151d8a688d39615ace5d389b7fa4f0dbf887819b7c::my_token::SimpleToken"; // generic type arg
-    const stringBytes = ethers.toUtf8Bytes("my_secret_password_for_swap_test");
-    const secret_hash = hexToUint8Array(ethers.keccak256(stringBytes));
-    const dst_amount = 10_000;
-    const expiration_duration_secs = 3_600;
-  
+
+  const dst_amount = 10_000;
+  const expiration_duration_secs = Math.floor(Date.now() / 1000) + 3600;
+  const secret = ethers.toUtf8Bytes("my_secret_password_for_swap_test");
+  const secret_hash = hexToUint8Array(ethers.keccak256(secret));
   // --------------------------------------------------------------------
 
   // Build the txn payload
   const payload = {
     type: "entry_function_payload",
     function:
-      "0x55625547c27ed94dde4184151d8a688d39615ace5d389b7fa4f0dbf887819b7c::swap_v2::fund_dst_escrow",
-    // 1) generic type argumentsc
+      "0x55625547c27ed94dde4184151d8a688d39615ace5d389b7fa4f0dbf887819b7c::swap_v3::fund_dst_escrow",
+    // 1) generic type arguments
     type_arguments: [SRC_COIN_TYPE],
     // 2) the four explicit Move parameters, IN ORDER, all as strings or hex
     arguments: [
@@ -123,19 +97,20 @@ async function claim_funds() {
   const SRC_COIN_TYPE =
     "0x55625547c27ed94dde4184151d8a688d39615ace5d389b7fa4f0dbf887819b7c::my_token::SimpleToken"; // generic type arg
 
-  const order_id = 4; // iterate by hand :)
-  const stringBytes = ethers.toUtf8Bytes("my_secret_password_for_swap_test");
+  const order_id = 10;
+  const secret = ethers.toUtf8Bytes("my_secret_password_for_swap_test");
+  //   const secretVec8 = hexToUint8Array(ethers.keccak256(secret));
   // --------------------------------------------------------------------
 
   // Build the txn payload
   const payload = {
     type: "entry_function_payload",
     function:
-      "0x55625547c27ed94dde4184151d8a688d39615ace5d389b7fa4f0dbf887819b7c::swap_v2::claim_funds",
+      "0x55625547c27ed94dde4184151d8a688d39615ace5d389b7fa4f0dbf887819b7c::swap_v3::claim_funds",
     // 1) generic type arguments
     type_arguments: [SRC_COIN_TYPE],
     // 2) the four explicit Move parameters, IN ORDER, all as strings or hex
-    arguments: [order_id.toString(), stringBytes],
+    arguments: [order_id.toString(), secret],
   };
 
   //   console.log("payload", payload);
@@ -148,14 +123,14 @@ async function cancel_swap() {
   const SRC_COIN_TYPE =
     "0x55625547c27ed94dde4184151d8a688d39615ace5d389b7fa4f0dbf887819b7c::my_token::SimpleToken"; // generic type arg
 
-  const order_id = 0;
+  const order_id = 1;
   // --------------------------------------------------------------------
 
   // Build the txn payload
   const payload = {
     type: "entry_function_payload",
     function:
-      "0x55625547c27ed94dde4184151d8a688d39615ace5d389b7fa4f0dbf887819b7c::swap_v2::cancel_swap",
+      "0x55625547c27ed94dde4184151d8a688d39615ace5d389b7fa4f0dbf887819b7c::swap_v3::cancel_swap",
     // 1) generic type arguments
     type_arguments: [SRC_COIN_TYPE],
     // 2) the four explicit Move parameters, IN ORDER, all as strings or hex
@@ -172,18 +147,21 @@ async function signAndSubmit(payload: any) {
   const rawTxn = await client.generateTransaction(account.address(), payload);
   console.log("rawTxn", rawTxn.payload);
   const bcsTxn = AptosClient.generateBCSTransaction(account, rawTxn);
-  //   console.log("bcsTxn", bcsTxn);
   const pending = await client.submitSignedBCSTransaction(bcsTxn);
   console.log("pending", pending);
   await client.waitForTransaction(pending.hash);
-  console.log("✓ Txn:", pending.hash);
+  console.log("✓ Txn:", `https://explorer.aptoslabs.com/txn/${pending.hash}?network=mainnet`);
 }
 
 (async () => {
   //   await initialize_swap_ledger();
-  await anounce_order();
+  //   await anounce_order();
 
-  // await fund_src_escrow();
+  // await fund_dst_escrow();
+
+  //   await claim_funds();
+
+  await cancel_swap();
 })();
 
 function hexToUint8Array(hex: string): Uint8Array {
@@ -203,12 +181,10 @@ function hexToUint8Array(hex: string): Uint8Array {
 }
 
 
-
 export {
     fund_dst_escrow,
     claim_funds,
     cancel_swap,
-    fund_src_escrow,
     anounce_order,
     initialize_swap_ledger,
 }

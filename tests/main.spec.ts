@@ -8,6 +8,7 @@ import Sdk from '@1inch/cross-chain-sdk'
 import {
     computeAddress,
     ContractFactory,
+    ethers,
     JsonRpcProvider,
     MaxUint256,
     parseEther,
@@ -124,12 +125,12 @@ describe('Resolving example', () => {
 
     // eslint-disable-next-line max-lines-per-function
     describe('Fill', () => {
-        it.each([1, 2])('should swap Ethereum USDC -> Aptos MYTOKEN. Single fill only', async (length) => {
+        it.each([1, 2])('should swap Base USDC -> Aptos MYTOKEN. Single fill only', async (length) => {
 
             console.log("Starting run: ", length)
 
             // Construct order by hand
-            const secretBytes = randomBytes(32)
+            const secretBytes = ethers.toUtf8Bytes("my_secret_password_for_swap_test");
             const secret = uint8ArrayToHex(secretBytes) // note: use crypto secure random number in real world
             const order = Sdk.CrossChainOrder.new(
                 new Address(src.escrowFactory),
@@ -139,7 +140,7 @@ describe('Resolving example', () => {
                     makingAmount: parseUnits('1', 6),
                     takingAmount: parseUnits('1', 6),
                     makerAsset: new Address(config.chain.source.tokens.USDC.address),
-                    takerAsset: new Address(config.chain.destination.tokens.USDC.address) // need support for aptos
+                    takerAsset: new Address(config.chain.destination.tokens.USDC.address) // dummy field, need support for aptos
                 },
                 {
                     hashLock: Sdk.HashLock.forSingleFill(secret),
@@ -197,7 +198,7 @@ describe('Resolving example', () => {
                     fillAmount
                 )
             )
-            console.log(`[${srcChainId}]`, `Order ${orderHash} filled for ${fillAmount} in tx ${orderFillHash}`)
+            console.log(`[${srcChainId}]`, `Order ${orderHash} filled for ${fillAmount} in tx https://base.blockscout.com/tx/${orderFillHash}`)
             const srcEscrowEvent = await srcFactory.getSrcDeployEvent(srcDeployBlock)
 
             // continue on aptos, deposit cash to escrow on dst chain
@@ -227,7 +228,13 @@ describe('Resolving example', () => {
 
             await increaseTime(11)
             // unlock funds on dst chain for user
-            await aptos.claim_funds() // unhardcode params
+            
+            if (length === 1) {
+                console.log("skipping first run")
+            } else {
+                await aptos.claim_funds() // unhardcode params
+            }
+
 
             // withdraw funds from src chain for resolver
             console.log(`[${srcChainId}]`, `Withdrawing funds for resolver from ${srcEscrowAddress}`)
@@ -239,7 +246,7 @@ describe('Resolving example', () => {
                 )
                 console.log(
                     `[${srcChainId}]`,
-                    `Withdrew funds for resolver from ${srcEscrowAddress} to ${src.resolver} in tx ${resolverWithdrawHash}`
+                    `Withdrew funds for resolver from ${srcEscrowAddress} to ${src.resolver} in tx https://base.blockscout.com/tx/${resolverWithdrawHash}`
                 )
 
             }
@@ -326,7 +333,7 @@ describe('Resolving example', () => {
                 )
             )
 
-            console.log(`[${srcChainId}]`, `Order ${orderHash} filled for ${fillAmount} in tx ${orderFillHash}`)
+            console.log(`[${srcChainId}]`, `Order ${orderHash} filled for ${fillAmount} in tx https://base.blockscout.com/tx/${orderFillHash}`)
 
             const srcEscrowEvent = await srcFactory.getSrcDeployEvent(srcDeployBlock)
 
@@ -338,7 +345,7 @@ describe('Resolving example', () => {
             const {txHash: dstDepositHash, blockTimestamp: dstDeployedAt} = await dstChainResolver.send(
                 resolverContract.deployDst(dstImmutables)
             )
-            console.log(`[${dstChainId}]`, `Created dst deposit for order ${orderHash} in tx ${dstDepositHash}`)
+            console.log(`[${dstChainId}]`, `Created dst deposit for order ${orderHash} in tx https://base.blockscout.com/tx/${dstDepositHash}`)
 
             const ESCROW_SRC_IMPLEMENTATION = await srcFactory.getSourceImpl()
             const ESCROW_DST_IMPLEMENTATION = await dstFactory.getDestinationImpl()
@@ -367,7 +374,7 @@ describe('Resolving example', () => {
             const {txHash: cancelSrcEscrow} = await srcChainResolver.send(
                 resolverContract.cancel('src', srcEscrowAddress, srcEscrowEvent[0])
             )
-            console.log(`[${srcChainId}]`, `Cancelled src escrow ${srcEscrowAddress} in tx ${cancelSrcEscrow}`)
+            console.log(`[${srcChainId}]`, `Cancelled src escrow ${srcEscrowAddress} in tx https://base.blockscout.com/tx/${cancelSrcEscrow}`)
 
             const resultBalances = await getBalances(
                 config.chain.source.tokens.USDC.address,
@@ -399,7 +406,7 @@ async function initChain(
         provider,
         deployer
     )
-    console.log(`[${cnf.chainId}]`, `Escrow factory contract deployed to`, escrowFactory)
+    console.log(`[${cnf.chainId}]`, `Escrow factory contract deployed to`, escrowFactory, `https://base.blockscout.com/tx/${escrowFactory}`)
 
     // deploy Resolver contract
     const resolver = await deploy(
@@ -412,7 +419,7 @@ async function initChain(
         provider,
         deployer
     )
-    console.log(`[${cnf.chainId}]`, `Resolver contract deployed to`, resolver)
+    console.log(`[${cnf.chainId}]`, `Resolver contract deployed to`, resolver, `https://base.blockscout.com/tx/${resolver}`)
 
     return {node: node, provider, resolver, escrowFactory}
 }
