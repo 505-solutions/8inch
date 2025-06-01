@@ -123,7 +123,7 @@ async function cancel_swap() {
   const SRC_COIN_TYPE =
     "0x55625547c27ed94dde4184151d8a688d39615ace5d389b7fa4f0dbf887819b7c::my_token::SimpleToken"; // generic type arg
 
-  const order_id = 1;
+  const order_id = 19;
   // --------------------------------------------------------------------
 
   // Build the txn payload
